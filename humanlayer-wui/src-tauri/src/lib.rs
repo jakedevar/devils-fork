@@ -550,7 +550,7 @@ pub fn run() {
                 let shortcut = app.handle().global_shortcut();
 
                 // Register the shortcut with a callback
-                shortcut.on_shortcut("cmd+shift+h", move |_app, _shortcut, _event| {
+                shortcut.on_shortcut("ctrl+alt+h", move |_app, _shortcut, _event| {
                     // Show quick launcher window
                     let _ = show_quick_launcher(app_handle.clone());
                 })?;

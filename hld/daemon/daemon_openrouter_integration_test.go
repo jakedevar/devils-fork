@@ -94,7 +94,7 @@ func TestOpenRouterProxyIntegration(t *testing.T) {
 			response["result"] = map[string]interface{}{
 				"tools": []interface{}{
 					map[string]interface{}{
-						"name":        "request_approval",
+						"name":        "request_permission",
 						"description": "Request approval for tool use",
 						"inputSchema": map[string]interface{}{
 							"type": "object",

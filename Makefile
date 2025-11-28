@@ -1,3 +1,5 @@
+UNAME_S := $(shell uname -s)
+
 .PHONY: setup
 setup: ## Set up the repository with all dependencies and builds
 	hack/setup_repo.sh
@@ -148,10 +150,37 @@ daemon-nightly: daemon-nightly-build
 # Build and install nightly WUI
 .PHONY: wui-nightly-build
 wui-nightly-build:
+ifeq ($(UNAME_S),Darwin)
 	cd humanlayer-wui && bun run tauri build --bundles app
 	@echo "Build complete. Installing to ~/Applications..."
 	cp -r humanlayer-wui/src-tauri/target/release/bundle/macos/CodeLayer.app ~/Applications/
 	@echo "Installed WUI nightly to ~/Applications/CodeLayer.app"
+else
+	@echo "Building nightly sidecars for Linux..."
+	$(eval BUILD_VERSION := $(shell date +%Y%m%d)-nightly-local)
+	cd hld && GOOS=linux GOARCH=amd64 go build -ldflags "\
+		-X github.com/humanlayer/humanlayer/hld/internal/version.BuildVersion=$(BUILD_VERSION) \
+		-X github.com/humanlayer/humanlayer/hld/config.DefaultDatabasePath=~/.humanlayer/daemon-nightly.db \
+		-X github.com/humanlayer/humanlayer/hld/config.DefaultSocketPath=~/.humanlayer/daemon-nightly.sock \
+		-X github.com/humanlayer/humanlayer/hld/config.DefaultHTTPPort=7778 \
+		-X github.com/humanlayer/humanlayer/hld/config.DefaultCLICommand=humanlayer" \
+		-o hld-linux-amd64 ./cmd/hld
+	cd hlyr && bun install && bun run build
+	cd hlyr && bun build ./dist/index.js --compile --target=bun-linux-x64 --outfile=humanlayer-linux-amd64
+	mkdir -p humanlayer-wui/src-tauri/bin
+	cp hld/hld-linux-amd64 humanlayer-wui/src-tauri/bin/hld
+	cp hlyr/humanlayer-linux-amd64 humanlayer-wui/src-tauri/bin/humanlayer
+	chmod +x humanlayer-wui/src-tauri/bin/hld
+	chmod +x humanlayer-wui/src-tauri/bin/humanlayer
+	@echo "Building Tauri app (skipping bundling due to Linux/Arch issues)..."
+	cd humanlayer-wui && bun run build
+	cd humanlayer-wui/src-tauri && cargo build --release
+	@echo "Copying sidecars to release directory..."
+	cp humanlayer-wui/src-tauri/bin/hld humanlayer-wui/src-tauri/target/release/
+	cp humanlayer-wui/src-tauri/bin/humanlayer humanlayer-wui/src-tauri/target/release/
+	@echo "Build complete. You can run the app with:"
+	@echo "./humanlayer-wui/src-tauri/target/release/humanlayer-wui"
+endif
 
 # Build humanlayer binary for bundling
 .PHONY: humanlayer-build
@@ -180,6 +209,7 @@ codelayer-bundle:
 codelayer-nightly-bundle:
 	@echo "Setting build version..."
 	$(eval BUILD_VERSION := $(shell date +%Y%m%d)-nightly-local)
+ifeq ($(UNAME_S),Darwin)
 	@echo "Building nightly daemon for bundling (version: $(BUILD_VERSION))..."
 	cd hld && GOOS=darwin GOARCH=arm64 go build -ldflags "\
 		-X github.com/humanlayer/humanlayer/hld/internal/version.BuildVersion=$(BUILD_VERSION) \
@@ -215,6 +245,32 @@ codelayer-nightly-bundle:
 	)
 	@echo "Nightly build complete! DMG available at:"
 	@ls -la humanlayer-wui/src-tauri/target/release/bundle/dmg/*.dmg
+else
+	@echo "Building nightly daemon for bundling (version: $(BUILD_VERSION)) on Linux..."
+	cd hld && GOOS=linux GOARCH=amd64 go build -ldflags "\
+		-X github.com/humanlayer/humanlayer/hld/internal/version.BuildVersion=$(BUILD_VERSION) \
+		-X github.com/humanlayer/humanlayer/hld/config.DefaultDatabasePath=~/.humanlayer/daemon-nightly.db \
+		-X github.com/humanlayer/humanlayer/hld/config.DefaultSocketPath=~/.humanlayer/daemon-nightly.sock \
+		-X github.com/humanlayer/humanlayer/hld/config.DefaultHTTPPort=7778 \
+		-X github.com/humanlayer/humanlayer/hld/config.DefaultCLICommand=humanlayer" \
+		-o hld-linux-amd64 ./cmd/hld
+	@echo "Building humanlayer CLI for bundling..."
+	cd hlyr && bun install && bun run build
+	cd hlyr && bun build ./dist/index.js --compile --target=bun-linux-x64 --outfile=humanlayer-linux-amd64
+	chmod +x hlyr/humanlayer-linux-amd64
+	@echo "Copying binaries to Tauri resources..."
+	mkdir -p humanlayer-wui/src-tauri/bin
+	cp hld/hld-linux-amd64 humanlayer-wui/src-tauri/bin/hld
+	cp hlyr/humanlayer-linux-amd64 humanlayer-wui/src-tauri/bin/humanlayer
+	chmod +x humanlayer-wui/src-tauri/bin/hld
+	chmod +x humanlayer-wui/src-tauri/bin/humanlayer
+	@echo "Installing WUI dependencies..."
+	cd humanlayer-wui && bun install
+	@echo "Building Tauri app..."
+	cd humanlayer-wui && bun run tauri build
+	@echo "Build complete. Check output in humanlayer-wui/src-tauri/target/release/bundle/"
+endif
+
 
 # Open nightly WUI
 .PHONY: wui-nightly

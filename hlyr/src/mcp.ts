@@ -26,7 +26,7 @@ export async function startClaudeApprovalsMCPServer() {
 
   const server = new Server(
     {
-      name: 'humanlayer-claude-local-approvals',
+      name: 'codelayer',
       version: '1.0.0',
     },
     {

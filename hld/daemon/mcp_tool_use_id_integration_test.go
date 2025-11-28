@@ -87,7 +87,7 @@ func TestMCPToolUseIDCorrelation(t *testing.T) {
 		createReq := map[string]interface{}{
 			"query":                  "Write 'Hello World' to a file called test.txt and then exit",
 			"model":                  "sonnet",
-			"permission_prompt_tool": "mcp__codelayer__request_approval",
+			"permission_prompt_tool": "mcp__codelayer__request_permission",
 			"max_turns":              3,
 			"working_dir":            testWorkDir,
 			"mcp_config": map[string]interface{}{
@@ -223,7 +223,7 @@ func TestMCPToolUseIDCorrelation(t *testing.T) {
 		createReq := map[string]interface{}{
 			"query":                  "Create 3 files in parallel: file1.txt with 'One', file2.txt with 'Two', file3.txt with 'Three'. Use parallel tool calls if possible.",
 			"model":                  "sonnet",
-			"permission_prompt_tool": "mcp__codelayer__request_approval",
+			"permission_prompt_tool": "mcp__codelayer__request_permission",
 			"max_turns":              3,
 			"working_dir":            testWorkDir,
 			"mcp_config": map[string]interface{}{

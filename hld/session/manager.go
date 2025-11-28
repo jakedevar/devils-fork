@@ -200,8 +200,9 @@ func (m *Manager) LaunchSession(ctx context.Context, config LaunchSessionConfig,
 	}
 
 	// Always inject codelayer MCP server (overwrite if exists)
+	cliCommand := resolveCLICommand(hldconfig.DefaultCLICommand)
 	claudeConfig.MCPConfig.MCPServers["codelayer"] = claudecode.MCPServer{
-		Command: hldconfig.DefaultCLICommand,
+		Command: cliCommand,
 		Args:    []string{"mcp", "claude_approvals"},
 		Env: map[string]string{
 			"HUMANLAYER_SESSION_ID":    sessionID,
@@ -210,7 +211,8 @@ func (m *Manager) LaunchSession(ctx context.Context, config LaunchSessionConfig,
 	}
 	slog.Debug("injected codelayer MCP server",
 		"session_id", sessionID,
-		"socket_path", m.socketPath)
+		"socket_path", m.socketPath,
+		"command", cliCommand)
 
 	// Add HUMANLAYER_RUN_ID and HUMANLAYER_DAEMON_SOCKET to MCP server environment
 	// For HTTP servers, inject session ID header
@@ -1682,8 +1684,9 @@ func (m *Manager) ContinueSession(ctx context.Context, req ContinueSessionConfig
 	}
 
 	// Always update codelayer MCP server with child session ID
+	cliCommand := resolveCLICommand(hldconfig.DefaultCLICommand)
 	config.MCPConfig.MCPServers["codelayer"] = claudecode.MCPServer{
-		Command: hldconfig.DefaultCLICommand,
+		Command: cliCommand,
 		Args:    []string{"mcp", "claude_approvals"},
 		Env: map[string]string{
 			"HUMANLAYER_SESSION_ID":    sessionID, // Use child session ID
@@ -1693,7 +1696,8 @@ func (m *Manager) ContinueSession(ctx context.Context, req ContinueSessionConfig
 	slog.Debug("updated codelayer MCP server for child session",
 		"session_id", sessionID,
 		"parent_session_id", req.ParentSessionID,
-		"socket_path", m.socketPath)
+		"socket_path", m.socketPath,
+		"command", cliCommand)
 
 	if config.MCPConfig != nil {
 		for name, server := range config.MCPConfig.MCPServers {
@@ -1939,8 +1943,9 @@ func (m *Manager) launchDraftWithConfig(ctx context.Context, sessionID, runID st
 	}
 
 	// Always inject codelayer MCP server (overwrite if exists)
+	cliCommand := resolveCLICommand(hldconfig.DefaultCLICommand)
 	claudeConfig.MCPConfig.MCPServers["codelayer"] = claudecode.MCPServer{
-		Command: hldconfig.DefaultCLICommand,
+		Command: cliCommand,
 		Args:    []string{"mcp", "claude_approvals"},
 		Env: map[string]string{
 			"HUMANLAYER_SESSION_ID":    sessionID,

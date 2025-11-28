@@ -51,14 +51,14 @@ func NewMCPServer(approvalManager approval.Manager, eventBus bus.EventBus) *MCPS
 
 	// Create MCP server
 	s.mcpServer = server.NewMCPServer(
-		"humanlayer-daemon",
+		"codelayer",
 		"1.0.0",
 		server.WithToolCapabilities(true),
 	)
 
-	// Add request_approval tool
+	// Add request_permission tool
 	s.mcpServer.AddTool(
-		mcp.NewTool("request_approval",
+		mcp.NewTool("request_permission",
 			mcp.WithDescription("Request permission to execute a tool"),
 			mcp.WithString("tool_name",
 				mcp.Description("The name of the tool requesting permission"),

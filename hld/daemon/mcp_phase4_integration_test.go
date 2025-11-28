@@ -97,7 +97,7 @@ func TestMCPPhase4ApprovalCreation(t *testing.T) {
 			"id":      1,
 			"method":  "tools/call",
 			"params": map[string]interface{}{
-				"name": "request_approval",
+				"name": "request_permission",
 				"arguments": map[string]interface{}{
 					"tool_name":   "test_tool",
 					"input":       map[string]interface{}{"test": "data"},
@@ -163,7 +163,7 @@ func TestMCPPhase4ApprovalCreation(t *testing.T) {
 			"id":      2,
 			"method":  "tools/call",
 			"params": map[string]interface{}{
-				"name": "request_approval",
+				"name": "request_permission",
 				"arguments": map[string]interface{}{
 					"tool_name":   "edit_tool",
 					"input":       map[string]interface{}{"file": "test.txt"},
@@ -229,7 +229,7 @@ func TestMCPPhase4ApprovalCreation(t *testing.T) {
 				"id":      toolUseID,
 				"method":  "tools/call",
 				"params": map[string]interface{}{
-					"name": "request_approval",
+					"name": "request_permission",
 					"arguments": map[string]interface{}{
 						"tool_name":   "multi_tool",
 						"input":       map[string]interface{}{"id": toolUseID},
@@ -356,7 +356,7 @@ func TestMCPPhase4AutoDenyMode(t *testing.T) {
 			"id":      1,
 			"method":  "tools/call",
 			"params": map[string]interface{}{
-				"name": "request_approval",
+				"name": "request_permission",
 				"arguments": map[string]interface{}{
 					"tool_name":   "test_tool",
 					"input":       map[string]interface{}{"test": "data"},

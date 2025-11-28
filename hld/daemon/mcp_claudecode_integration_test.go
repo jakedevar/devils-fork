@@ -170,7 +170,7 @@ func TestMCPClaudeCodeSessionIDCorrelation(t *testing.T) {
 					response["result"] = map[string]interface{}{
 						"tools": []interface{}{
 							map[string]interface{}{
-								"name":        "request_approval",
+								"name":        "request_permission",
 								"description": "Request permission to execute a tool",
 								"inputSchema": map[string]interface{}{
 									"type": "object",
@@ -284,7 +284,7 @@ func TestMCPClaudeCodeSessionIDCorrelation(t *testing.T) {
 		Model:                claudecode.ModelSonnet,
 		OutputFormat:         claudecode.OutputStreamJSON,
 		MCPConfig:            mcpConfig,
-		PermissionPromptTool: "mcp__humanlayer__request_approval",
+		PermissionPromptTool: "mcp__humanlayer__request_permission",
 		MaxTurns:             1,
 		WorkingDir:           tempDir,
 		Verbose:              true,

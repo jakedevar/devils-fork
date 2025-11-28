@@ -97,7 +97,7 @@ func TestMCPServerFullImplementation(t *testing.T) {
 		require.Len(t, tools, 1)
 
 		tool := tools[0].(map[string]interface{})
-		assert.Equal(t, "request_approval", tool["name"])
+		assert.Equal(t, "request_permission", tool["name"])
 		assert.Equal(t, "Request permission to execute a tool", tool["description"])
 
 		// Check input schema structure
@@ -130,7 +130,7 @@ func TestMCPServerFullImplementation(t *testing.T) {
 			"id":      2,
 			"method":  "tools/call",
 			"params": map[string]interface{}{
-				"name": "request_approval",
+				"name": "request_permission",
 				"arguments": map[string]interface{}{
 					"tool_name":   "test_tool",
 					"input":       map[string]interface{}{"command": "ls -la"},
@@ -179,7 +179,7 @@ func TestMCPServerFullImplementation(t *testing.T) {
 			"id":      3,
 			"method":  "tools/call",
 			"params": map[string]interface{}{
-				"name": "request_approval",
+				"name": "request_permission",
 				"arguments": map[string]interface{}{
 					"tool_name":   "test_with_session",
 					"input":       map[string]interface{}{"test": "data"},
@@ -221,7 +221,7 @@ func TestMCPServerFullImplementation(t *testing.T) {
 			"id":      4,
 			"method":  "tools/call",
 			"params": map[string]interface{}{
-				"name": "request_approval",
+				"name": "request_permission",
 				"arguments": map[string]interface{}{
 					// Missing tool_use_id
 					"tool_name": "incomplete_tool",

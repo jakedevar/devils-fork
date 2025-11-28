@@ -151,7 +151,7 @@ func TestMCPStubEndpoint(t *testing.T) {
 		assert.Len(t, tools, 1)
 
 		tool := tools[0].(map[string]interface{})
-		assert.Equal(t, "request_approval", tool["name"])
+		assert.Equal(t, "request_permission", tool["name"])
 		assert.Contains(t, tool["description"], "Request permission to execute a tool")
 	})
 
@@ -232,7 +232,7 @@ func TestMCPStubEndpoint(t *testing.T) {
 			"id":      3,
 			"method":  "tools/call",
 			"params": map[string]interface{}{
-				"name": "request_approval",
+				"name": "request_permission",
 				"arguments": map[string]interface{}{
 					"tool_name":   "test_tool",
 					"input":       map[string]interface{}{"test": "data"},

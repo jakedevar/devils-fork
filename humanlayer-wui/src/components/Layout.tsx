@@ -41,6 +41,7 @@ import { logger } from '@/lib/logging'
 import { DangerousSkipPermissionsMonitor } from '@/components/DangerousSkipPermissionsMonitor'
 import { KeyboardShortcut } from '@/components/HotkeyPanel'
 import { DvdScreensaver } from '@/components/DvdScreensaver'
+import { SessionSearch } from '@/components/SessionSearch'
 import { TestErrorTrigger } from '@/components/TestErrorTrigger'
 import { CodeLayerToaster } from '@/components/internal/CodeLayerToaster'
 import { useDebugStore } from '@/stores/useDebugStore'
@@ -66,6 +67,9 @@ export function Layout() {
 
   // Hotkey panel state from store
   const { isHotkeyPanelOpen, setHotkeyPanelOpen } = useStore()
+  
+  // Session Search state
+  const [isSessionSearchOpen, setSessionSearchOpen] = useState(false)
 
   // PostHog tracking
   const { trackEvent } = usePostHogTracking()
@@ -770,6 +774,19 @@ export function Layout() {
     },
   )
 
+  // F - Toggle Session Search
+  useHotkeys(
+    'f',
+    () => {
+      setSessionSearchOpen(prev => !prev)
+    },
+    {
+      scopes: [HOTKEY_SCOPES.ROOT],
+      preventDefault: true,
+      enableOnFormTags: false,
+    },
+  )
+
   // Global hotkey for feedback
   // Don't specify scopes to make it work globally (defaults to wildcard '*')
   useHotkeys(
@@ -1093,6 +1110,9 @@ export function Layout() {
 
       {/* Session Launcher Modal */}
       <SessionLauncher isOpen={isOpen} onClose={close} />
+
+      {/* Session Search Modal */}
+      <SessionSearch open={isSessionSearchOpen} onOpenChange={setSessionSearchOpen} />
 
       {/* Hotkey Panel */}
       <HotkeyPanel open={isHotkeyPanelOpen} onOpenChange={setHotkeyPanelOpen} />

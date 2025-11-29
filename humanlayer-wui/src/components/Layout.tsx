@@ -110,6 +110,31 @@ export function Layout() {
     }
   }, [])
 
+  // Vim-like navigation
+  // Ctrl+o: Go back in history (Jumplist Back)
+  useHotkeys(
+    'ctrl+o',
+    () => navigate(-1),
+    {
+      preventDefault: true,
+      enableOnFormTags: false,
+      scopes: [HOTKEY_SCOPES.ROOT],
+    },
+    [navigate],
+  )
+
+  // Ctrl+i: Go forward in history (Jumplist Forward)
+  useHotkeys(
+    'ctrl+i',
+    () => navigate(1),
+    {
+      preventDefault: true,
+      enableOnFormTags: false,
+      scopes: [HOTKEY_SCOPES.ROOT],
+    },
+    [navigate],
+  )
+
   // Secret hotkey for launch theme
   useHotkeys(
     'meta+shift+y, ctrl+shift+y',

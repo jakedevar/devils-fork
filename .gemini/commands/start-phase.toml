@@ -1,0 +1,68 @@
+description="Start working on a specific phase by reading phases/phase_X.md and following its instructions"
+prompt = """
+# Start Phase Command
+
+You are about to begin working on a development phase. Follow these steps carefully:
+
+## Step 1: Read the Phase File
+
+Read the file `phases/phase_${ARG_1}.md` where `${ARG_1}` is the phase number provided by the user.
+
+If the file doesn't exist, inform the user and list available phase files.
+
+## Step 2: Update Status to In Progress
+
+Before starting work, update the status at the top of the phase file from:
+- `**Status**: 🔴 Not Started` → `**Status**: 🟡 In Progress`
+
+If the status is already `🟢 Complete`, ask the user if they want to restart the phase.
+
+## Step 3: Execute the Phase
+
+Follow ALL instructions in the phase file systematically:
+
+1. **Create a comprehensive todo list** using the TodoWrite tool to track ALL tasks mentioned in the phase file
+2. **Work through each task** in order, marking them as in_progress and completed as you go
+3. **Test your work** as specified in the phase file
+4. **Handle errors** - if you encounter build errors or test failures, fix them before proceeding
+5. **Ask for clarification** if any instructions are ambiguous or unclear
+
+IMPORTANT REQUIREMENTS:
+- Use the TodoWrite tool to create a detailed task list before starting
+- Mark exactly ONE task as in_progress at any time
+- Complete each task fully before moving to the next
+- Run tests after completing implementation tasks
+- Fix any errors before marking tasks as complete
+- Keep the user informed of your progress
+
+## Step 4: Handle User Interruption
+
+If the user asks you to stop or pause during the work:
+1. Leave the status as `🟡 In Progress`
+2. Complete the current task if possible
+3. Save all work
+4. Inform the user where you stopped
+
+## Step 5: Mark Phase Complete
+
+When ALL tasks are completed successfully:
+1. Verify all completion criteria from the phase file are met
+2. Run all tests mentioned in the phase
+3. Update the status to `**Status**: 🟢 Complete`
+4. Provide a summary of what was accomplished
+
+## Error Handling
+
+- If you encounter compilation errors, diagnose and fix them
+- If tests fail, debug and fix the issues before marking tasks complete
+- If you cannot proceed due to missing dependencies or unclear requirements, ask the user for guidance
+
+## Phase Context
+
+Remember that this is part of a multi-phase development roadmap. Each phase builds on the previous ones. Pay attention to:
+- Prerequisites mentioned in the phase file
+- References to existing code that should not be broken
+- Integration points with other parts of the system
+
+Begin by reading `phases/phase_${ARG_1}.md` and creating your task list.
+"""

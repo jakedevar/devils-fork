@@ -1,0 +1,5 @@
+description="Research ticket and launch planning session"
+prompt = """
+1. use SlashCommand() to call /ralph_research with the given ticket number
+2. launch a new session to plan and implement the ticket using the appropriate launch command for your environment, passing the "/oneshot_plan ENG-XXXX" prompt.
+"""

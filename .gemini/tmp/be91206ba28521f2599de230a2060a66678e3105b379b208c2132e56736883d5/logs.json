@@ -1,0 +1,142 @@
+[
+  {
+    "sessionId": "501270b8-33dc-455a-91ef-b16ef0724216",
+    "messageId": 0,
+    "type": "user",
+    "message": "/exit",
+    "timestamp": "2025-11-21T02:32:13.059Z"
+  },
+  {
+    "sessionId": "0b97040c-ddb5-4636-a61a-87c6b3fc68fc",
+    "messageId": 0,
+    "type": "user",
+    "message": "i put ctrl+c in my @ghostty/config to copy to my clipboard on my arch linux machine. Now I can't use that combination to stop a running terminal. is it possible to change the ctrl+c combiniation to copy only a selection and have it still stop a running terminal when nothing is selected?",
+    "timestamp": "2025-11-21T02:42:27.800Z"
+  },
+  {
+    "sessionId": "0b97040c-ddb5-4636-a61a-87c6b3fc68fc",
+    "messageId": 1,
+    "type": "user",
+    "message": "/ecit",
+    "timestamp": "2025-11-21T02:43:28.409Z"
+  },
+  {
+    "sessionId": "0b97040c-ddb5-4636-a61a-87c6b3fc68fc",
+    "messageId": 2,
+    "type": "user",
+    "message": "exit",
+    "timestamp": "2025-11-21T02:43:29.861Z"
+  },
+  {
+    "sessionId": "0b97040c-ddb5-4636-a61a-87c6b3fc68fc",
+    "messageId": 3,
+    "type": "user",
+    "message": "/exit",
+    "timestamp": "2025-11-21T02:43:33.602Z"
+  },
+  {
+    "sessionId": "d8df784a-cf0b-4285-9cdf-f8270d30fdfe",
+    "messageId": 0,
+    "type": "user",
+    "message": "/exit",
+    "timestamp": "2025-11-21T02:44:53.752Z"
+  },
+  {
+    "sessionId": "fe9cb310-71dc-46f1-ad44-b428ab5f8f7b",
+    "messageId": 0,
+    "type": "user",
+    "message": "/model",
+    "timestamp": "2025-11-21T02:45:08.075Z"
+  },
+  {
+    "sessionId": "fe9cb310-71dc-46f1-ad44-b428ab5f8f7b",
+    "messageId": 1,
+    "type": "user",
+    "message": "why does performable mean in this config @ghostty/config",
+    "timestamp": "2025-11-21T02:45:26.661Z"
+  },
+  {
+    "sessionId": "fe9cb310-71dc-46f1-ad44-b428ab5f8f7b",
+    "messageId": 2,
+    "type": "user",
+    "message": "it dosen't seem to be working when i start my terminal",
+    "timestamp": "2025-11-21T02:46:17.479Z"
+  },
+  {
+    "sessionId": "fe9cb310-71dc-46f1-ad44-b428ab5f8f7b",
+    "messageId": 3,
+    "type": "user",
+    "message": "/exit",
+    "timestamp": "2025-11-21T02:48:12.867Z"
+  },
+  {
+    "sessionId": "5805feac-7af4-4f33-bf8e-4be81371a952",
+    "messageId": 0,
+    "type": "user",
+    "message": "/auth",
+    "timestamp": "2025-11-21T02:56:19.392Z"
+  },
+  {
+    "sessionId": "5805feac-7af4-4f33-bf8e-4be81371a952",
+    "messageId": 1,
+    "type": "user",
+    "message": "based on what is in this folder and the @i3/config:\n1. see if the i3 config is configured for what is on this system\n  a. make the modifications to make it correct\n2. add a command in the i3 config to quit a window on $mod+q",
+    "timestamp": "2025-11-21T02:58:36.030Z"
+  },
+  {
+    "sessionId": "5805feac-7af4-4f33-bf8e-4be81371a952",
+    "messageId": 2,
+    "type": "user",
+    "message": "/settings",
+    "timestamp": "2025-11-21T02:58:52.536Z"
+  },
+  {
+    "sessionId": "4ee65a40-0448-4820-bf93-8cfe29e330e0",
+    "messageId": 0,
+    "type": "user",
+    "message": "/model",
+    "timestamp": "2025-11-21T02:59:54.724Z"
+  },
+  {
+    "sessionId": "4ee65a40-0448-4820-bf93-8cfe29e330e0",
+    "messageId": 1,
+    "type": "user",
+    "message": "look in this directory and aspecially at the @i3/config \n1. based on whats on this system make sure the i3 config is compatible. For instance, the volume goes up and down but poly bar does not change the percentage and the wifi connection just says %local_ip%\n2. the $mod+q command should exit/quit a window\n3. suggest improvements to the i3 config to make it better, target the most usefull configurations as well as any I might not have that I should.",
+    "timestamp": "2025-11-21T03:02:08.696Z"
+  },
+  {
+    "sessionId": "ca65c594-d475-4f6d-8aaa-3d32043a75d2",
+    "messageId": 0,
+    "type": "user",
+    "message": "/auth",
+    "timestamp": "2025-11-21T03:03:28.750Z"
+  },
+  {
+    "sessionId": "ca65c594-d475-4f6d-8aaa-3d32043a75d2",
+    "messageId": 1,
+    "type": "user",
+    "message": "/model",
+    "timestamp": "2025-11-21T03:04:32.697Z"
+  },
+  {
+    "sessionId": "ca65c594-d475-4f6d-8aaa-3d32043a75d2",
+    "messageId": 2,
+    "type": "user",
+    "message": "check the files in this dir and especially look at @i3/config make sure that what is installed on this system is compatible with it (this is an arch linux system)\n1. the volume goes up and down but the percentage does not change in polybar, the wifi is showing %local_ip% instead of the correct thing\n2. make $mod+q quit/exit the current focused window \n3. make suggestions about how I can make my setup more useful. Target things that are often common in i3 configs or polybar and picom configs",
+    "timestamp": "2025-11-21T03:07:00.530Z"
+  },
+  {
+    "sessionId": "ca65c594-d475-4f6d-8aaa-3d32043a75d2",
+    "messageId": 3,
+    "type": "user",
+    "message": "continue",
+    "timestamp": "2025-11-21T03:09:25.698Z"
+  },
+  {
+    "sessionId": "ca65c594-d475-4f6d-8aaa-3d32043a75d2",
+    "messageId": 4,
+    "type": "user",
+    "message": "continue",
+    "timestamp": "2025-11-21T03:13:59.966Z"
+  }
+]

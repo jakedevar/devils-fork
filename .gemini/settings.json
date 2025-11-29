@@ -1,0 +1,17 @@
+{
+  "security": {
+    "auth": {}
+  },
+  "general": {
+    "vimMode": true,
+    "previewFeatures": true,
+    "disableAutoUpdate": false,
+    "preferredEditor": "neovim"
+  },
+  "tools": {
+    "enableHooks": false
+  },
+  "checkPointing": {
+    "enabled": true
+  }
+}

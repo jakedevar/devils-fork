@@ -1,0 +1,147 @@
+description="Fix all Rust build errors and warnings across the Healthy Mind workspace in parallel"
+prompt = """
+# Fix Build Errors Command
+
+You are tasked with fixing all Rust compiler errors and warnings in the Healthy Mind project workspace using a parallel, multi-agent approach.
+
+## Workflow
+
+### Step 1: Run Cargo Check
+
+Run `cargo check` on the entire workspace:
+
+```
+cargo check --workspace --message-format=json
+```
+
+### Step 2: Parse and Group Issues by File
+
+Analyze the cargo_check output to:
+1. Extract all unique file paths with errors/warnings
+2. Group errors and warnings by file
+3. Count total issues per file
+
+The output format from cargo_check includes file paths and line numbers like:
+```
+error: Message
+  --> path/to/file.rs:123:45
+```
+
+Parse these to create a map of files to their issues.
+
+### Step 3: Create a Todo List
+
+Use TodoWrite to create a todo list with:
+- One todo item per file that has errors/warnings
+- Format: "Fix [N] error(s) and [M] warning(s) in [filename]"
+- Mark all as pending initially
+
+### Step 4: Launch Parallel Agents
+
+For each file with errors/warnings, launch a Task agent using the `healthy-mind-rust-fixer` skill.
+
+**CRITICAL**: Launch ALL agents in a SINGLE message using multiple Task tool calls. This ensures true parallel execution.
+
+For each file, provide the agent with:
+
+```markdown
+You are using the healthy-mind-rust-fixer skill to fix Rust errors in a specific file.
+
+**File to fix:** [absolute path to file]
+
+**Errors and warnings in this file:**
+[Paste the relevant cargo_check output for this file]
+
+**Your task:**
+1. Read the file at the path above
+2. Fix all errors and warnings listed
+3. Apply Healthy Mind project patterns (Dioxus 0.6, server functions, etc.)
+4. Use the Edit tool to make fixes
+5. Report completion with a summary of all fixes made
+
+**Important:**
+- Fix errors before warnings
+- Preserve existing code functionality
+- Follow Dioxus 0.6 syntax (key formatting, server function syntax)
+- Don't remove code unnecessarily
+- Maintain type safety
+```
+
+### Step 5: Monitor and Update Progress
+
+As agents complete:
+- Update the todo list marking items as completed
+- Track which files have been fixed
+- Note any files that couldn't be fully fixed
+
+### Step 6: Verify Final State
+
+After all agents complete:
+
+1. Run cargo_check again to verify all issues are resolved:
+```
+cargo check --workspace
+```
+
+2. Report final status:
+   - Total errors fixed
+   - Total warnings fixed
+   - Files modified
+   - Any remaining issues (if any)
+
+## Example Execution
+
+```
+User runs: /fix/build-errors
+
+Step 1: Run cargo_check
+[Gets 15 errors in 3 files, 8 warnings in 2 files]
+
+Step 2: Group by file
+- ui/src/views/home.rs: 5 errors, 2 warnings
+- api/src/lib.rs: 8 errors, 4 warnings
+- ui/src/components/button.rs: 2 errors, 2 warnings
+
+Step 3: Create todos
+✓ TodoWrite with 3 items (one per file)
+
+Step 4: Launch agents IN PARALLEL (single message with 3 Task calls)
+- Agent 1: Fix ui/src/views/home.rs
+- Agent 2: Fix api/src/lib.rs
+- Agent 3: Fix ui/src/components/button.rs
+
+[All agents run simultaneously]
+
+Step 5: Monitor progress
+[Update todos as agents complete]
+
+Step 6: Verify
+Run cargo_check → 0 errors, 0 warnings
+Report success!
+```
+
+## Key Success Factors
+
+1. **Parallel Execution**: Launch ALL agents in ONE message for true parallelism
+2. **Comprehensive Context**: Give each agent the specific errors for their file
+3. **Project Patterns**: Agents use healthy-mind-rust-fixer skill which knows Dioxus 0.6 patterns
+4. **Verification**: Always run cargo_check at the end to confirm success
+5. **Progress Tracking**: Use TodoWrite to keep user informed
+
+## Error Handling
+
+If cargo_check shows no issues:
+- Report that the build is already clean
+- No need to launch agents
+
+If agents can't fix certain issues:
+- Report which issues remain
+- Provide suggestions for manual intervention
+- Note that some issues may require architectural changes
+
+## Notes
+
+- The healthy-mind-rust-fixer skill provides project-specific fixing patterns
+- Parallel agent execution significantly reduces time to fix large sets of errors
+- Each agent operates independently on its assigned file, preventing conflicts
+"""

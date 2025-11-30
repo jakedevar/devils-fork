@@ -11,18 +11,20 @@ export function SessionDetailPage() {
   const activeSessionDetail = useStore(state => state.activeSessionDetail)
   const fetchActiveSessionDetail = useStore(state => state.fetchActiveSessionDetail)
   const clearActiveSessionDetail = useStore(state => state.clearActiveSessionDetail)
+  const pushSessionVisit = useStore(state => state.pushSessionVisit)
   // Get the session from store if available for most up-to-date state (moved before early returns)
   const sessionFromStore = useStore(state => state.sessions.find(s => s.id === sessionId))
 
   useEffect(() => {
     if (sessionId) {
       fetchActiveSessionDetail(sessionId)
+      pushSessionVisit(sessionId)
     }
 
     return () => {
       clearActiveSessionDetail()
     }
-  }, [sessionId, fetchActiveSessionDetail, clearActiveSessionDetail])
+  }, [sessionId, fetchActiveSessionDetail, clearActiveSessionDetail, pushSessionVisit])
 
   const handleClose = () => {
     navigate('/')

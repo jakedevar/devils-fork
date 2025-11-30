@@ -111,28 +111,41 @@ export function Layout() {
   }, [])
 
   // Vim-like navigation
-  // Ctrl+o: Go back in history (Jumplist Back)
+  const jumplistBack = useStore(state => state.jumplistBack)
+  const jumplistForward = useStore(state => state.jumplistForward)
+
+  // Shift+H / Ctrl+O: Jumplist Back
   useHotkeys(
     'ctrl+o',
-    () => navigate(-1),
+    () => {
+      const prevSessionId = jumplistBack()
+      if (prevSessionId) {
+        navigate(`/sessions/${prevSessionId}`)
+      }
+    },
     {
       preventDefault: true,
       enableOnFormTags: false,
       scopes: [HOTKEY_SCOPES.ROOT],
     },
-    [navigate],
+    [jumplistBack, navigate],
   )
 
-  // Ctrl+i: Go forward in history (Jumplist Forward)
+  // Shift+L / Ctrl+I: Jumplist Forward
   useHotkeys(
     'ctrl+i',
-    () => navigate(1),
+    () => {
+      const nextSessionId = jumplistForward()
+      if (nextSessionId) {
+        navigate(`/sessions/${nextSessionId}`)
+      }
+    },
     {
       preventDefault: true,
       enableOnFormTags: false,
       scopes: [HOTKEY_SCOPES.ROOT],
     },
-    [navigate],
+    [jumplistForward, navigate],
   )
 
   // Secret hotkey for launch theme

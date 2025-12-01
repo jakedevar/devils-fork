@@ -92,6 +92,13 @@ interface StoreState {
   trackNavigationFrom: (sessionId: string) => void
   wasRecentlyNavigatedFrom: (sessionId: string, withinMs?: number) => boolean
 
+  /* Session Jumplist */
+  sessionHistory: string[]
+  sessionHistoryIndex: number
+  pushSessionVisit: (sessionId: string) => void
+  jumplistBack: () => string | null
+  jumplistForward: () => string | null
+
   /* UI State */
   isHotkeyPanelOpen: boolean
   setHotkeyPanelOpen: (open: boolean) => void
@@ -975,6 +982,56 @@ export const useStore = create<StoreState>((set, get) => {
         `Checking navigation for session ${sessionId}: elapsed ${elapsed}ms, within ${withinMs}ms window: ${wasRecent}`,
       )
       return wasRecent
+    },
+
+    /* Session Jumplist */
+    sessionHistory: [],
+    sessionHistoryIndex: -1,
+
+    pushSessionVisit: (sessionId: string) =>
+      set(state => {
+        const { sessionHistory, sessionHistoryIndex } = state
+
+        // If empty, just add it
+        if (sessionHistory.length === 0) {
+          return { sessionHistory: [sessionId], sessionHistoryIndex: 0 }
+        }
+
+        // If same as current, do nothing
+        if (sessionHistory[sessionHistoryIndex] === sessionId) {
+          return state
+        }
+
+        // Truncate future history if we are in the middle
+        const newHistory = sessionHistory.slice(0, sessionHistoryIndex + 1)
+
+        // Add new session
+        newHistory.push(sessionId)
+
+        return {
+          sessionHistory: newHistory,
+          sessionHistoryIndex: newHistory.length - 1,
+        }
+      }),
+
+    jumplistBack: () => {
+      const state = get()
+      if (state.sessionHistoryIndex > 0) {
+        const newIndex = state.sessionHistoryIndex - 1
+        set({ sessionHistoryIndex: newIndex })
+        return state.sessionHistory[newIndex]
+      }
+      return null
+    },
+
+    jumplistForward: () => {
+      const state = get()
+      if (state.sessionHistoryIndex < state.sessionHistory.length - 1) {
+        const newIndex = state.sessionHistoryIndex + 1
+        set({ sessionHistoryIndex: newIndex })
+        return state.sessionHistory[newIndex]
+      }
+      return null
     },
 
     // Active Session Detail Actions

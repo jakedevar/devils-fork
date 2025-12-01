@@ -110,6 +110,8 @@ export interface GetSessionRequest {
 
 export interface GetSessionMessagesRequest {
     id: string;
+    limit?: number;
+    offset?: number;
 }
 
 export interface GetSessionSnapshotsRequest {
@@ -273,6 +275,8 @@ export interface SessionsApiInterface {
      * Retrieve the full conversation history for a session, including messages, tool calls, and tool results. 
      * @summary Get conversation messages
      * @param {string} id Session ID
+     * @param {number} [limit] Max number of messages to return
+     * @param {number} [offset] Offset for pagination
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof SessionsApiInterface
@@ -385,9 +389,9 @@ export interface SessionsApiInterface {
     listSessions(requestParameters: ListSessionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SessionsResponse>;
 
     /**
-     * Search for sessions using SQL LIKE queries against the title field. Returns top sessions ordered by last_activity_at descending. Limited to 20 most recently modified sessions for performance. 
-     * @summary Search sessions by title
-     * @param {string} [query] Search query for title matching (uses SQL LIKE)
+     * Search for sessions using SQL LIKE queries across title, summary, and query fields. Only returns \"normal\" leaf sessions (not archived, not draft, not discarded, no children). Returns top sessions ordered by last_activity_at descending. Limited to 20 most recently modified sessions for performance. 
+     * @summary Search sessions
+     * @param {string} [query] Search query for matching against title, summary, or query fields (uses SQL LIKE)
      * @param {number} [limit] Maximum number of results to return
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -396,8 +400,8 @@ export interface SessionsApiInterface {
     searchSessionsRaw(requestParameters: SearchSessionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SessionSearchResponse>>;
 
     /**
-     * Search for sessions using SQL LIKE queries against the title field. Returns top sessions ordered by last_activity_at descending. Limited to 20 most recently modified sessions for performance. 
-     * Search sessions by title
+     * Search for sessions using SQL LIKE queries across title, summary, and query fields. Only returns \"normal\" leaf sessions (not archived, not draft, not discarded, no children). Returns top sessions ordered by last_activity_at descending. Limited to 20 most recently modified sessions for performance. 
+     * Search sessions
      */
     searchSessions(requestParameters: SearchSessionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SessionSearchResponse>;
 
@@ -723,6 +727,14 @@ export class SessionsApi extends runtime.BaseAPI implements SessionsApiInterface
 
         const queryParameters: any = {};
 
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        if (requestParameters['offset'] != null) {
+            queryParameters['offset'] = requestParameters['offset'];
+        }
+
         const headerParameters: runtime.HTTPHeaders = {};
 
 
@@ -999,8 +1011,8 @@ export class SessionsApi extends runtime.BaseAPI implements SessionsApiInterface
     }
 
     /**
-     * Search for sessions using SQL LIKE queries against the title field. Returns top sessions ordered by last_activity_at descending. Limited to 20 most recently modified sessions for performance. 
-     * Search sessions by title
+     * Search for sessions using SQL LIKE queries across title, summary, and query fields. Only returns \"normal\" leaf sessions (not archived, not draft, not discarded, no children). Returns top sessions ordered by last_activity_at descending. Limited to 20 most recently modified sessions for performance. 
+     * Search sessions
      */
     async searchSessionsRaw(requestParameters: SearchSessionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SessionSearchResponse>> {
         const queryParameters: any = {};
@@ -1029,8 +1041,8 @@ export class SessionsApi extends runtime.BaseAPI implements SessionsApiInterface
     }
 
     /**
-     * Search for sessions using SQL LIKE queries against the title field. Returns top sessions ordered by last_activity_at descending. Limited to 20 most recently modified sessions for performance. 
-     * Search sessions by title
+     * Search for sessions using SQL LIKE queries across title, summary, and query fields. Only returns \"normal\" leaf sessions (not archived, not draft, not discarded, no children). Returns top sessions ordered by last_activity_at descending. Limited to 20 most recently modified sessions for performance. 
+     * Search sessions
      */
     async searchSessions(requestParameters: SearchSessionsRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SessionSearchResponse> {
         const response = await this.searchSessionsRaw(requestParameters, initOverrides);

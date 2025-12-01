@@ -13,6 +13,8 @@ import {
     CreateSessionResponse,
     CreateSessionResponseData,
     EventFromJSON,
+    GetSessionMessagesRequest,
+    ConversationEvent,
     RecentPath,
     ListSessionsRequest,
     UserSettingsResponse,
@@ -240,8 +242,9 @@ export class HLDClient {
     }
 
     // Get session messages
-    async getSessionMessages(id: string, initOverrides?: RequestInit): Promise<any[]> {
-        const response = await this.sessionsApi.getSessionMessages({ id }, initOverrides);
+    async getSessionMessages(request: string | GetSessionMessagesRequest, initOverrides?: RequestInit): Promise<ConversationEvent[]> {
+        const params = typeof request === 'string' ? { id: request } : request;
+        const response = await this.sessionsApi.getSessionMessages(params, initOverrides);
         return response.data;
     }
 

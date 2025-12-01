@@ -24,7 +24,7 @@ type ConversationStore interface {
 	// Conversation operations
 	AddConversationEvent(ctx context.Context, event *ConversationEvent) error
 	GetConversation(ctx context.Context, claudeSessionID string) ([]*ConversationEvent, error)
-	GetSessionConversation(ctx context.Context, sessionID string) ([]*ConversationEvent, error)
+	GetSessionConversation(ctx context.Context, sessionID string, limit int, offset int) ([]*ConversationEvent, error)
 
 	// Tool call operations
 	GetPendingToolCall(ctx context.Context, sessionID string, toolName string) (*ConversationEvent, error)

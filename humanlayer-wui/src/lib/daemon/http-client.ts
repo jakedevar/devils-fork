@@ -531,6 +531,8 @@ export class HTTPDaemonClient implements IDaemonClient {
     params: {
       session_id?: string
       claude_session_id?: string
+      limit?: number
+      offset?: number
     },
     options?: RequestInit,
   ): Promise<ConversationEvent[]> {
@@ -538,7 +540,14 @@ export class HTTPDaemonClient implements IDaemonClient {
     if (!params.session_id) {
       throw new Error('session_id is required')
     }
-    const messages = await this.client!.getSessionMessages(params.session_id, options)
+    const messages = await this.client!.getSessionMessages(
+      {
+        id: params.session_id,
+        limit: params.limit,
+        offset: params.offset,
+      },
+      options,
+    )
     return messages
   }
 

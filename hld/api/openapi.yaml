@@ -419,6 +419,19 @@ paths:
         - Sessions
       parameters:
         - $ref: '#/components/parameters/sessionId'
+        - name: limit
+          in: query
+          description: Max number of messages to return
+          schema:
+            type: integer
+            default: 1000
+            maximum: 5000
+        - name: offset
+          in: query
+          description: Offset for pagination
+          schema:
+            type: integer
+            default: 0
       responses:
         '200':
           description: Conversation messages

@@ -157,36 +157,7 @@ export function ConversationStream({
     return () => container.removeEventListener('scroll', handleScroll)
   }, [hasMore, loading, loadMore])
 
-  // Maintain scroll position when items are prepended
-  const previousFirstEventIdRef = useRef<string | null>(null)
-  useEffect(() => {
-    if (eventsToRender.length > 0) {
-      const firstEventId = eventsToRender[0].id.toString() // Assuming ID is usable as key
-      const container = containerRef.current
 
-      if (
-        container &&
-        previousFirstEventIdRef.current &&
-        firstEventId !== previousFirstEventIdRef.current &&
-        eventsToRender.length > previousEventCountRef.current // Items added
-      ) {
-        // Items were prepended (new first ID != old first ID and count increased)
-        // We need to adjust scroll position
-        // Ideally, TanStack Virtual handles this if we use `maintainScrollToIndex`?
-        // But since we are manually managing scroll for "load more", we might need to be careful.
-        // Actually, let's let the user scroll up naturally. If the new content pushes them down, that's bad.
-        // The standard pattern is:
-        // 1. Measure scrollHeight before update.
-        // 2. Measure scrollHeight after update.
-        // 3. scrollTop += (newScrollHeight - oldScrollHeight).
-        // This is hard to do in useEffect because we don't have "before" state easily here.
-        // But we can use the ref we set in the onScroll handler?
-        // Let's rely on the fact that if we are near top, adding items pushes content down.
-        // To keep the *current* first visible item stable, we need to scroll down.
-      }
-      previousFirstEventIdRef.current = firstEventId
-    }
-  }, [eventsToRender])
 
   // Initial scroll to bottom
   const hasScrolledToBottomRef = useRef(false)

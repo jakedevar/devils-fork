@@ -52,11 +52,13 @@ The goal was to add a global setting that forces "Bypass Permissions" (dangerous
 ### Frontend
 1.  **Store**: Updated `AppStore.ts` to include `alwaysBypassPermissions` in `userSettings` state and synchronization logic.
 2.  **UI**: Added a `Switch` component in `SettingsDialog.tsx` labeled "Always Bypass Permissions" with a warning description.
+3.  **Indicator**: Updated `AutoAcceptIndicator.tsx` to display a **red glowing infinity symbol** instead of the shield icon when the permanent bypass setting is active, providing clear visual feedback.
 
 ## Code References
 -   `hld/store/sqlite.go`: Migration 23 and updated CRUD for user settings.
 -   `hld/rpc/handlers.go`: Logic to apply global setting to new sessions.
 -   `humanlayer-wui/src/components/SettingsDialog.tsx`: New toggle UI.
+-   `humanlayer-wui/src/components/internal/SessionDetail/AutoAcceptIndicator.tsx`: Updated icon logic.
 -   `hld/api/openapi.yaml`: API schema definition.
 
 ## Open Questions

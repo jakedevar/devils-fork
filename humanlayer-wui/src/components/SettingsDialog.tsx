@@ -110,6 +110,25 @@ export function SettingsDialog({ open, onOpenChange, onConfigUpdate }: SettingsD
     }
   }
 
+  const handleBypassToggle = async (checked: boolean) => {
+    try {
+      setSaving(true)
+      await updateUserSettings({ alwaysBypassPermissions: checked })
+      logger.log('Always bypass permissions setting updated:', checked)
+
+      toast.success(checked ? 'Always bypass permissions enabled' : 'Always bypass permissions disabled', {
+        description: checked
+          ? 'New sessions will automatically bypass permissions.'
+          : 'New sessions will require permissions.',
+      })
+    } catch (error) {
+      logger.error('Failed to update bypass settings:', error)
+      toast.error('Failed to update settings')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const handleTelemetryToggle = async (checked: boolean) => {
     try {
       setSaving(true)
@@ -279,6 +298,23 @@ export function SettingsDialog({ open, onOpenChange, onConfigUpdate }: SettingsD
                 id="advanced-providers"
                 checked={userSettings?.advancedProviders ?? false}
                 onCheckedChange={handleProvidersToggle}
+                disabled={!userSettings || saving}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="always-bypass" className="text-sm font-medium">
+                  Always Bypass Permissions
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Automatically approve all tool calls for new sessions (Dangerous!)
+                </p>
+              </div>
+              <Switch
+                id="always-bypass"
+                checked={userSettings?.alwaysBypassPermissions ?? false}
+                onCheckedChange={handleBypassToggle}
                 disabled={!userSettings || saving}
               />
             </div>

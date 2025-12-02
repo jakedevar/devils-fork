@@ -1117,6 +1117,42 @@ func (s *SQLiteStore) applyMigrations() error {
 		slog.Info("Migration 22 applied successfully")
 	}
 
+	// Migration 23: Add always_bypass_permissions to user_settings
+	if currentVersion < 23 {
+		slog.Info("Applying migration 23: Add always_bypass_permissions to user_settings")
+
+		// Check if column already exists
+		var columnExists int
+		err := s.db.QueryRow(`
+			SELECT COUNT(*) FROM pragma_table_info('user_settings')
+			WHERE name = 'always_bypass_permissions'
+		`).Scan(&columnExists)
+		if err != nil {
+			return fmt.Errorf("failed to check always_bypass_permissions column: %w", err)
+		}
+
+		if columnExists == 0 {
+			_, err = s.db.Exec(`
+				ALTER TABLE user_settings
+				ADD COLUMN always_bypass_permissions BOOLEAN DEFAULT FALSE
+			`)
+			if err != nil {
+				return fmt.Errorf("failed to add always_bypass_permissions column: %w", err)
+			}
+		}
+
+		// Record migration
+		_, err = s.db.Exec(`
+			INSERT INTO schema_version (version, description)
+			VALUES (23, 'Add always_bypass_permissions to user_settings')
+		`)
+		if err != nil {
+			return fmt.Errorf("failed to record migration 23: %w", err)
+		}
+
+		slog.Info("Migration 23 applied successfully")
+	}
+
 	return nil
 }
 
@@ -2161,29 +2197,38 @@ func (s *SQLiteStore) GetRecentWorkingDirs(ctx context.Context, limit int) ([]Re
 func (s *SQLiteStore) GetUserSettings(ctx context.Context) (*UserSettings, error) {
 	var settings UserSettings
 	err := s.db.QueryRowContext(ctx, `
-		SELECT advanced_providers, opt_in_telemetry, created_at, updated_at
+		SELECT advanced_providers, opt_in_telemetry, always_bypass_permissions, created_at, updated_at
 		FROM user_settings WHERE id = 1
-	`).Scan(&settings.AdvancedProviders, &settings.OptInTelemetry, &settings.CreatedAt, &settings.UpdatedAt)
+	`).Scan(&settings.AdvancedProviders, &settings.OptInTelemetry, &settings.AlwaysBypassPermissions, &settings.CreatedAt, &settings.UpdatedAt)
 
 	if err == sql.ErrNoRows {
-		// Return defaults if not found (for backwards compatibility)
+		// Return default settings if not found (should be initialized by migration)
 		return &UserSettings{
-			AdvancedProviders: false,
-			CreatedAt:         time.Now(),
-			UpdatedAt:         time.Now(),
+			AdvancedProviders:       false,
+			AlwaysBypassPermissions: false,
+			CreatedAt:               time.Now(),
+			UpdatedAt:               time.Now(),
 		}, nil
 	}
-	return &settings, err
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user settings: %w", err)
+	}
+
+	return &settings, nil
 }
 
 // UpdateUserSettings updates the user settings in the database
 func (s *SQLiteStore) UpdateUserSettings(ctx context.Context, settings UserSettings) error {
 	_, err := s.db.ExecContext(ctx, `
 		UPDATE user_settings
-		SET advanced_providers = ?, opt_in_telemetry = ?, updated_at = CURRENT_TIMESTAMP
+		SET advanced_providers = ?, opt_in_telemetry = ?, always_bypass_permissions = ?, updated_at = CURRENT_TIMESTAMP
 		WHERE id = 1
-	`, settings.AdvancedProviders, settings.OptInTelemetry)
-	return err
+	`, settings.AdvancedProviders, settings.OptInTelemetry, settings.AlwaysBypassPermissions)
+
+	if err != nil {
+		return fmt.Errorf("failed to update user settings: %w", err)
+	}
+	return nil
 }
 
 // AddConversationEvent adds a new conversation event

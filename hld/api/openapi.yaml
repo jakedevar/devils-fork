@@ -1976,6 +1976,7 @@ components:
       type: object
       required:
         - advanced_providers
+        - always_bypass_permissions
         - created_at
         - updated_at
       properties:
@@ -1985,6 +1986,9 @@ components:
         opt_in_telemetry:
           type: boolean
           description: Opt-in for performance and error reporting
+        always_bypass_permissions:
+          type: boolean
+          description: Always bypass permissions for new sessions
         created_at:
           type: string
           format: date-time
@@ -2009,6 +2013,9 @@ components:
         opt_in_telemetry:
           type: boolean
           description: Opt-in or opt-out of performance and error reporting
+        always_bypass_permissions:
+          type: boolean
+          description: Always bypass permissions for new sessions
 
     # Approval Types
     Approval:

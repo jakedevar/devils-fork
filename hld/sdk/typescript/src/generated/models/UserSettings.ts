@@ -32,6 +32,12 @@ export interface UserSettings {
      */
     optInTelemetry?: boolean;
     /**
+     * Always bypass permissions for new sessions
+     * @type {boolean}
+     * @memberof UserSettings
+     */
+    alwaysBypassPermissions: boolean;
+    /**
      * 
      * @type {Date}
      * @memberof UserSettings
@@ -50,6 +56,7 @@ export interface UserSettings {
  */
 export function instanceOfUserSettings(value: object): value is UserSettings {
     if (!('advancedProviders' in value) || value['advancedProviders'] === undefined) return false;
+    if (!('alwaysBypassPermissions' in value) || value['alwaysBypassPermissions'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
     if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     return true;
@@ -67,6 +74,7 @@ export function UserSettingsFromJSONTyped(json: any, ignoreDiscriminator: boolea
         
         'advancedProviders': json['advanced_providers'],
         'optInTelemetry': json['opt_in_telemetry'] == null ? undefined : json['opt_in_telemetry'],
+        'alwaysBypassPermissions': json['always_bypass_permissions'],
         'createdAt': (new Date(json['created_at'])),
         'updatedAt': (new Date(json['updated_at'])),
     };
@@ -85,6 +93,7 @@ export function UserSettingsToJSONTyped(value?: UserSettings | null, ignoreDiscr
         
         'advanced_providers': value['advancedProviders'],
         'opt_in_telemetry': value['optInTelemetry'],
+        'always_bypass_permissions': value['alwaysBypassPermissions'],
         'created_at': ((value['createdAt']).toISOString()),
         'updated_at': ((value['updatedAt']).toISOString()),
     };

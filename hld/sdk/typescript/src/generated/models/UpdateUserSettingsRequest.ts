@@ -31,6 +31,12 @@ export interface UpdateUserSettingsRequest {
      * @memberof UpdateUserSettingsRequest
      */
     optInTelemetry?: boolean;
+    /**
+     * Always bypass permissions for new sessions
+     * @type {boolean}
+     * @memberof UpdateUserSettingsRequest
+     */
+    alwaysBypassPermissions?: boolean;
 }
 
 /**
@@ -52,6 +58,7 @@ export function UpdateUserSettingsRequestFromJSONTyped(json: any, ignoreDiscrimi
         
         'advancedProviders': json['advanced_providers'] == null ? undefined : json['advanced_providers'],
         'optInTelemetry': json['opt_in_telemetry'] == null ? undefined : json['opt_in_telemetry'],
+        'alwaysBypassPermissions': json['always_bypass_permissions'] == null ? undefined : json['always_bypass_permissions'],
     };
 }
 
@@ -68,6 +75,7 @@ export function UpdateUserSettingsRequestToJSONTyped(value?: UpdateUserSettingsR
         
         'advanced_providers': value['advancedProviders'],
         'opt_in_telemetry': value['optInTelemetry'],
+        'always_bypass_permissions': value['alwaysBypassPermissions'],
     };
 }
 

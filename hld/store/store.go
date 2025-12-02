@@ -65,10 +65,11 @@ type ConversationStore interface {
 
 // UserSettings represents user preferences
 type UserSettings struct {
-	AdvancedProviders bool      `json:"advanced_providers"`
-	OptInTelemetry    *bool     `json:"opt_in_telemetry"` // Pointer to handle NULL (unset)
-	CreatedAt         time.Time `json:"created_at"`
-	UpdatedAt         time.Time `json:"updated_at"`
+	AdvancedProviders       bool      `json:"advanced_providers"`
+	OptInTelemetry          *bool     `json:"opt_in_telemetry"` // Pointer to handle NULL (unset)
+	AlwaysBypassPermissions bool      `json:"always_bypass_permissions"`
+	CreatedAt               time.Time `json:"created_at"`
+	UpdatedAt               time.Time `json:"updated_at"`
 }
 
 // Session represents a Claude Code session

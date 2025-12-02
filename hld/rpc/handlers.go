@@ -100,6 +100,19 @@ func (h *SessionHandlers) HandleLaunchSession(ctx context.Context, params json.R
 		DangerouslySkipPermissionsTimeout: req.DangerouslySkipPermissionsTimeout,
 	}
 
+	// Check user settings for permanent bypass
+	if !config.DangerouslySkipPermissions {
+		userSettings, err := h.store.GetUserSettings(ctx)
+		if err != nil {
+			slog.Error("failed to get user settings", "error", err)
+			// Continue without override
+		} else if userSettings.AlwaysBypassPermissions {
+			config.DangerouslySkipPermissions = true
+			// If global bypass is on, we likely want no timeout (permanent for the session)
+			// config.DangerouslySkipPermissionsTimeout will be nil, which means no timeout
+		}
+	}
+
 	// Parse model if provided
 	if req.Model != "" {
 		switch req.Model {

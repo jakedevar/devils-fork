@@ -115,11 +115,13 @@ interface StoreState {
   userSettings: {
     advancedProviders: boolean
     optInTelemetry?: boolean
+    alwaysBypassPermissions?: boolean
   } | null
   fetchUserSettings: () => Promise<void>
   updateUserSettings: (settings: {
     advancedProviders?: boolean
     optInTelemetry?: boolean
+    alwaysBypassPermissions?: boolean
   }) => Promise<void>
 
   /* Claude Configuration */
@@ -1113,25 +1115,31 @@ export const useStore = create<StoreState>((set, get) => {
     fetchUserSettings: async () => {
       try {
         const response = await daemonClient.getUserSettings()
-        const { advancedProviders, optInTelemetry } = response.data
+        const { advancedProviders, optInTelemetry, alwaysBypassPermissions } = response.data
         set({
           userSettings: {
             advancedProviders,
             optInTelemetry,
+            alwaysBypassPermissions,
           },
         })
       } catch (error) {
         logger.error('Failed to fetch user settings:', error)
       }
     },
-    updateUserSettings: async (settings: { advancedProviders?: boolean; optInTelemetry?: boolean }) => {
+    updateUserSettings: async (settings: {
+      advancedProviders?: boolean
+      optInTelemetry?: boolean
+      alwaysBypassPermissions?: boolean
+    }) => {
       try {
         const response = await daemonClient.updateUserSettings(settings)
-        const { advancedProviders, optInTelemetry } = response.data
+        const { advancedProviders, optInTelemetry, alwaysBypassPermissions } = response.data
         set({
           userSettings: {
             advancedProviders,
             optInTelemetry,
+            alwaysBypassPermissions,
           },
         })
       } catch (error) {

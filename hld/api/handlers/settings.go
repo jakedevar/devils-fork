@@ -71,6 +71,32 @@ func (h *SettingsHandlers) UpdateUserSettings(ctx context.Context, req api.Updat
 	}
 	if req.Body.AlwaysBypassPermissions != nil {
 		current.AlwaysBypassPermissions = *req.Body.AlwaysBypassPermissions
+
+		// If enabling always bypass, clear expiration for any active sessions that have bypass enabled
+		if current.AlwaysBypassPermissions {
+			// TODO: Add a more efficient store method for this if needed
+			sessions, err := h.store.ListSessions(ctx)
+			if err != nil {
+				slog.Error("Failed to list sessions for updating bypass permissions", "error", err)
+				// Continue anyway to save user settings
+			} else {
+				for _, session := range sessions {
+					// Check if session has bypass enabled and has an expiration
+					if session.DangerouslySkipPermissions && session.DangerouslySkipPermissionsExpiresAt != nil {
+						// Clear the expiration
+						var nilTime *time.Time
+						update := store.SessionUpdate{
+							DangerouslySkipPermissionsExpiresAt: &nilTime,
+						}
+						if err := h.store.UpdateSession(ctx, session.ID, update); err != nil {
+							slog.Error("Failed to update session bypass expiration", "session_id", session.ID, "error", err)
+						} else {
+							slog.Info("Cleared bypass expiration for session due to global setting change", "session_id", session.ID)
+						}
+					}
+				}
+			}
+		}
 	}
 
 	// Save updated settings

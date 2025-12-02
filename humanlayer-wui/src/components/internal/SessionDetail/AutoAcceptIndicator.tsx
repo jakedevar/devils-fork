@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { ShieldOff, Info, Infinity } from 'lucide-react'
+import { Info, Infinity } from 'lucide-react'
 import { toast } from 'sonner'
 import { useStore } from '@/AppStore'
 import { logger } from '@/lib/logging'
@@ -114,11 +114,12 @@ export const SessionModeIndicator: FC<SessionModeIndicatorProps> = ({
         )}
       >
         <div className="flex items-center gap-2">
-          {isPermanentBypass ? (
-            <Infinity className="h-4 w-4 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]" strokeWidth={3} />
-          ) : (
-            <ShieldOff className="h-4 w-4" strokeWidth={3} />
-          )}
+          <Infinity
+            className={cn("h-4 w-4", {
+              "drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]": isPermanentBypass,
+            })}
+            strokeWidth={3}
+          />
           <span className="uppercase tracking-wider">
             {isDraft ? 'WILL BYPASS PERMISSIONS ON LAUNCH' : 'BYPASSING PERMISSIONS'}
           </span>

@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/humanlayer/humanlayer/hld/api"
 	"github.com/humanlayer/humanlayer/hld/store"

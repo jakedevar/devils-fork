@@ -1191,7 +1191,17 @@ func (h *SessionHandlers) InterruptSession(ctx context.Context, req api.Interrup
 
 // GetSessionMessages retrieves conversation history for a session
 func (h *SessionHandlers) GetSessionMessages(ctx context.Context, req api.GetSessionMessagesRequestObject) (api.GetSessionMessagesResponseObject, error) {
-	events, err := h.store.GetSessionConversation(ctx, string(req.Id))
+	limit := 1000
+	if req.Params.Limit != nil {
+		limit = *req.Params.Limit
+	}
+
+	offset := 0
+	if req.Params.Offset != nil {
+		offset = *req.Params.Offset
+	}
+
+	events, err := h.store.GetSessionConversation(ctx, string(req.Id), limit, offset)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return api.GetSessionMessages404JSONResponse{

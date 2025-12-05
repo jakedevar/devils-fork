@@ -110,6 +110,8 @@ export interface GetSessionRequest {
 
 export interface GetSessionMessagesRequest {
     id: string;
+    limit?: number;
+    offset?: number;
 }
 
 export interface GetSessionSnapshotsRequest {
@@ -273,6 +275,8 @@ export interface SessionsApiInterface {
      * Retrieve the full conversation history for a session, including messages, tool calls, and tool results. 
      * @summary Get conversation messages
      * @param {string} id Session ID
+     * @param {number} [limit] Max number of messages to return
+     * @param {number} [offset] Offset for pagination
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof SessionsApiInterface
@@ -722,6 +726,14 @@ export class SessionsApi extends runtime.BaseAPI implements SessionsApiInterface
         }
 
         const queryParameters: any = {};
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        if (requestParameters['offset'] != null) {
+            queryParameters['offset'] = requestParameters['offset'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 

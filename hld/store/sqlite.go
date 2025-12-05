@@ -2320,8 +2320,8 @@ func (s *SQLiteStore) GetConversation(ctx context.Context, claudeSessionID strin
 	return events, nil
 }
 
-// GetSessionConversation retrieves all events for a session including parent history
-func (s *SQLiteStore) GetSessionConversation(ctx context.Context, sessionID string) ([]*ConversationEvent, error) {
+// GetSessionConversation retrieves conversation history for a session (including parents)
+func (s *SQLiteStore) GetSessionConversation(ctx context.Context, sessionID string, limit int, offset int) ([]*ConversationEvent, error) {
 	// Walk up the parent chain to get all related claude session IDs
 	claudeSessionIDs := []string{}
 	currentID := sessionID
@@ -2350,6 +2350,7 @@ func (s *SQLiteStore) GetSessionConversation(ctx context.Context, sessionID stri
 
 		// Add claude session ID if present (in reverse order for chronological events)
 		if claudeSessionID.Valid && claudeSessionID.String != "" {
+			// Prepend to list so [0] is oldest ancestor
 			claudeSessionIDs = append([]string{claudeSessionID.String}, claudeSessionIDs...)
 		}
 
@@ -2366,7 +2367,7 @@ func (s *SQLiteStore) GetSessionConversation(ctx context.Context, sessionID stri
 		return []*ConversationEvent{}, nil
 	}
 
-	// Get all events for all claude session IDs in chronological order
+	// Get all events for all claude session IDs
 	placeholders := make([]string, len(claudeSessionIDs))
 	args := make([]interface{}, len(claudeSessionIDs))
 	for i, id := range claudeSessionIDs {
@@ -2378,10 +2379,14 @@ func (s *SQLiteStore) GetSessionConversation(ctx context.Context, sessionID stri
 	// This ensures parent events come before child events
 	orderCases := make([]string, len(claudeSessionIDs))
 	for i := range claudeSessionIDs {
+		// i=0 is oldest ancestor (grandparent), i=len-1 is current session
 		orderCases[i] = fmt.Sprintf("WHEN claude_session_id = ? THEN %d", i)
-		args = append(args, claudeSessionIDs[i])
+		args = append(args, claudeSessionIDs[i]) // Append IDs again for CASE
 	}
 
+	// We want the most recent events first for pagination
+	// So we order by Session Index DESC (youngest session first)
+	// Then by Sequence DESC (newest message first)
 	query := fmt.Sprintf(`
 		SELECT id, session_id, claude_session_id, sequence, event_type, created_at,
 			role, content,
@@ -2391,9 +2396,19 @@ func (s *SQLiteStore) GetSessionConversation(ctx context.Context, sessionID stri
 		FROM conversation_events
 		WHERE claude_session_id IN (%s)
 		ORDER BY
-			CASE %s END,
-			sequence
+			CASE %s END DESC,
+			sequence DESC
 	`, strings.Join(placeholders, ","), strings.Join(orderCases, " "))
+
+	// Apply LIMIT and OFFSET if valid
+	if limit > 0 {
+		query += " LIMIT ?"
+		args = append(args, limit)
+	}
+	if offset >= 0 {
+		query += " OFFSET ?"
+		args = append(args, offset)
+	}
 
 	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -2403,19 +2418,47 @@ func (s *SQLiteStore) GetSessionConversation(ctx context.Context, sessionID stri
 
 	var events []*ConversationEvent
 	for rows.Next() {
-		event := &ConversationEvent{}
+		var event ConversationEvent
+		var role, content, toolID, toolName, toolInputJSON, parentToolUseID sql.NullString
+		var toolResultForID, toolResultContent, approvalStatus, approvalID sql.NullString
+		var isCompleted sql.NullBool
+
 		err := rows.Scan(
-			&event.ID, &event.SessionID, &event.ClaudeSessionID,
-			&event.Sequence, &event.EventType, &event.CreatedAt,
-			&event.Role, &event.Content,
-			&event.ToolID, &event.ToolName, &event.ToolInputJSON, &event.ParentToolUseID,
-			&event.ToolResultForID, &event.ToolResultContent,
-			&event.IsCompleted, &event.ApprovalStatus, &event.ApprovalID,
+			&event.ID, &event.SessionID, &event.ClaudeSessionID, &event.Sequence, &event.EventType, &event.CreatedAt,
+			&role, &content,
+			&toolID, &toolName, &toolInputJSON, &parentToolUseID,
+			&toolResultForID, &toolResultContent,
+			&isCompleted, &approvalStatus, &approvalID,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan event: %w", err)
+			return nil, fmt.Errorf("failed to scan conversation event: %w", err)
 		}
-		events = append(events, event)
+
+		// Handle nullable fields
+		event.Role = role.String
+		event.Content = content.String
+		event.ToolID = toolID.String
+		event.ToolName = toolName.String
+		event.ToolInputJSON = toolInputJSON.String
+		event.ParentToolUseID = parentToolUseID.String
+		event.ToolResultForID = toolResultForID.String
+		event.ToolResultContent = toolResultContent.String
+		if isCompleted.Valid {
+			event.IsCompleted = isCompleted.Bool
+		}
+		event.ApprovalStatus = approvalStatus.String
+		event.ApprovalID = approvalID.String
+
+		events = append(events, &event)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("conversation events iteration: %w", err)
+	}
+
+	// Reverse events to chronological order (oldest first)
+	for i, j := 0, len(events)-1; i < j; i, j = i+1, j-1 {
+		events[i], events[j] = events[j], events[i]
 	}
 
 	return events, nil

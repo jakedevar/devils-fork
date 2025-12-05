@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useLayoutEffect } from 'react'
 import keyBy from 'lodash.keyby'
+import { useVirtualizer } from '@tanstack/react-virtual'
 
 import { ConversationEvent, ConversationEventType, Session } from '@/lib/daemon/types'
 import { useConversation } from '@/hooks/useConversation'
@@ -12,7 +13,6 @@ import { ConversationEventRow } from './ConversationEventRow'
 import { TaskGroupEventRow } from './TaskGroupEventRow'
 
 // TODO(2): Extract keyboard navigation logic to a custom hook
-// TODO(3): Add virtual scrolling for very long conversations
 
 export function ConversationStream({
   session,
@@ -57,7 +57,10 @@ export function ConversationStream({
   // expandedToolResult is used by parent to control hotkey availability
   void expandedToolResult
   const sessionId = session.id
-  const { events, loading, error, isInitialLoad } = useConversation(sessionId, undefined, 1000)
+  const { events, loading, error, isInitialLoad, loadMore, hasMore } = useConversation(
+    sessionId,
+    undefined,
+  )
   const { refetch } = useSessionSnapshots(sessionId)
   const responseEditor = useStore(state => state.responseEditor)
   const [showSkeleton, setShowSkeleton] = useState(false)
@@ -112,6 +115,65 @@ export function ConversationStream({
   const previousEventCountRef = useRef(0)
   const previousEventsRef = useRef<ConversationEvent[]>([])
 
+  // Virtualizer setup
+  const rowVirtualizer = useVirtualizer({
+    count: eventsToRender.length,
+    getScrollElement: () => containerRef.current,
+    estimateSize: () => 100, // Initial estimate, dynamic measurement will take over
+    overscan: 5,
+  })
+
+  const scrollAdjustmentRef = useRef<{ previousHeight: number } | null>(null)
+
+  // Maintain scroll position when items are prepended (via loadMore)
+  useLayoutEffect(() => {
+    if (scrollAdjustmentRef.current && containerRef.current) {
+      const { previousHeight } = scrollAdjustmentRef.current
+      const newHeight = containerRef.current.scrollHeight
+      const diff = newHeight - previousHeight
+
+      if (diff > 0) {
+        containerRef.current.scrollTop += diff
+        console.log('[ConversationStream] Adjusted scroll by', diff)
+      }
+      scrollAdjustmentRef.current = null
+    }
+  }, [eventsToRender.length])
+
+  // Handle scroll to top to load more
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const handleScroll = () => {
+      if (container.scrollTop < 50 && hasMore && !loading) {
+        // Save current scroll height to adjust position after load
+        scrollAdjustmentRef.current = { previousHeight: container.scrollHeight }
+        loadMore()
+      }
+    }
+
+    container.addEventListener('scroll', handleScroll)
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [hasMore, loading, loadMore])
+
+
+
+  // Initial scroll to bottom
+  const hasScrolledToBottomRef = useRef(false)
+
+  // Reset scroll flag when session changes
+  useEffect(() => {
+    hasScrolledToBottomRef.current = false
+  }, [sessionId])
+
+  useEffect(() => {
+    if (!loading && eventsToRender.length > 0 && !hasScrolledToBottomRef.current) {
+      rowVirtualizer.scrollToIndex(eventsToRender.length - 1, { align: 'end' })
+      hasScrolledToBottomRef.current = true
+    }
+  }, [loading, eventsToRender.length, rowVirtualizer])
+
   // Use the auto-scroll hook
   useAutoScroll(
     containerRef,
@@ -138,41 +200,27 @@ export function ConversationStream({
   // Scroll focused event into view (only for keyboard navigation)
   useEffect(() => {
     if (focusedEventId && containerRef.current && focusSource === 'keyboard') {
-      const focusedElement = containerRef.current.querySelector(`[data-event-id="${focusedEventId}"]`)
-      if (focusedElement) {
-        const elementRect = focusedElement.getBoundingClientRect()
-        const containerRect = containerRef.current.getBoundingClientRect()
-        const inView =
-          elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom
-        if (!inView) {
-          focusedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-        }
+      // Find the index of the focused event
+      const index = eventsToRender.findIndex(e => e.id === focusedEventId)
+      if (index !== -1) {
+        rowVirtualizer.scrollToIndex(index, { align: 'center', behavior: 'smooth' })
       }
     }
-  }, [focusedEventId, focusSource])
+  }, [focusedEventId, focusSource, eventsToRender, rowVirtualizer])
 
   // Scroll deny form into view when opened
   useEffect(() => {
     if (denyingApprovalId && containerRef.current) {
       // Find the event that contains this approval
-      const event = filteredEvents.find(e => e.approvalId === denyingApprovalId)
-      if (event && !event.approvalStatus) {
-        const eventElement = containerRef.current.querySelector(`[data-event-id="${event.id}"]`)
-        if (eventElement) {
-          const elementRect = eventElement.getBoundingClientRect()
-          const containerRect = containerRef.current.getBoundingClientRect()
-          const inView =
-            elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom
-          if (!inView) {
-            // Scroll the deny form into view
-            setTimeout(() => {
-              eventElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-            }, 100) // Small delay to ensure form is rendered
-          }
-        }
+      const index = eventsToRender.findIndex(e => e.approvalId === denyingApprovalId)
+      if (index !== -1) {
+        // Small delay to ensure form is rendered/measured
+        setTimeout(() => {
+          rowVirtualizer.scrollToIndex(index, { align: 'center', behavior: 'smooth' })
+        }, 100)
       }
     }
-  }, [denyingApprovalId, filteredEvents])
+  }, [denyingApprovalId, eventsToRender, rowVirtualizer])
 
   if (error) {
     console.log('error', error)
@@ -194,67 +242,88 @@ export function ConversationStream({
     return null
   }
 
-  // Render using the new ConversationEventRow component
+  // Render using virtualizer
   return (
     <div
       ref={containerRef}
       data-conversation-container
       className="overflow-y-auto flex-1 flex flex-col"
     >
-      {eventsToRender.map((event, index) => {
-        const taskGroup = event.toolId ? taskGroups.get(event.toolId) : undefined
+      <div
+        style={{
+          height: `${rowVirtualizer.getTotalSize()}px`,
+          width: '100%',
+          position: 'relative',
+        }}
+      >
+        {rowVirtualizer.getVirtualItems().map(virtualRow => {
+          const event = eventsToRender[virtualRow.index]
+          const index = virtualRow.index
+          const taskGroup = event.toolId ? taskGroups.get(event.toolId) : undefined
 
-        if (taskGroup) {
           return (
-            <TaskGroupEventRow
-              key={event.id}
-              group={taskGroup}
-              session={session}
-              isExpanded={actualExpandedTasks.has(event.toolId!)}
-              onToggle={() => actualToggleTaskGroup(event.toolId!)}
-              toolResult={undefined}
-              toolResultsByKey={toolResultsByKey}
-              focusedEventId={focusedEventId}
-              setFocusedEventId={setFocusedEventId}
-              setFocusSource={setFocusSource || (() => {})}
-              shouldIgnoreMouseEvent={shouldIgnoreMouseEvent || (() => false)}
-              isFocused={focusedEventId === event.id}
-              isLast={index === eventsToRender.length - 1}
-              responseEditorIsFocused={responseEditor?.isFocused || false}
-              setExpandedToolResult={setExpandedToolResult}
-              setExpandedToolCall={setExpandedToolCall}
-              onApprove={onApprove}
-              onDeny={onDeny}
-              approvingApprovalId={approvingApprovalId}
-              denyingApprovalId={denyingApprovalId}
-              setDenyingApprovalId={setDenyingApprovalId}
-              onCancelDeny={onCancelDeny}
-            />
+            <div
+              key={virtualRow.key}
+              data-index={virtualRow.index}
+              ref={rowVirtualizer.measureElement}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                transform: `translateY(${virtualRow.start}px)`,
+              }}
+            >
+              {taskGroup ? (
+                <TaskGroupEventRow
+                  key={event.id}
+                  group={taskGroup}
+                  session={session}
+                  isExpanded={actualExpandedTasks.has(event.toolId!)}
+                  onToggle={() => actualToggleTaskGroup(event.toolId!)}
+                  toolResult={undefined}
+                  toolResultsByKey={toolResultsByKey}
+                  focusedEventId={focusedEventId}
+                  setFocusedEventId={setFocusedEventId}
+                  setFocusSource={setFocusSource || (() => {})}
+                  shouldIgnoreMouseEvent={shouldIgnoreMouseEvent || (() => false)}
+                  isFocused={focusedEventId === event.id}
+                  isLast={index === eventsToRender.length - 1}
+                  responseEditorIsFocused={responseEditor?.isFocused || false}
+                  setExpandedToolResult={setExpandedToolResult}
+                  setExpandedToolCall={setExpandedToolCall}
+                  onApprove={onApprove}
+                  onDeny={onDeny}
+                  approvingApprovalId={approvingApprovalId}
+                  denyingApprovalId={denyingApprovalId}
+                  setDenyingApprovalId={setDenyingApprovalId}
+                  onCancelDeny={onCancelDeny}
+                />
+              ) : (
+                <ConversationEventRow
+                  key={event.id}
+                  event={event}
+                  toolResult={event.toolId ? toolResultsByKey[event.toolId] : undefined}
+                  setFocusedEventId={setFocusedEventId}
+                  setFocusSource={setFocusSource || (() => {})}
+                  shouldIgnoreMouseEvent={shouldIgnoreMouseEvent || (() => false)}
+                  isFocused={focusedEventId === event.id}
+                  isLast={index === eventsToRender.length - 1}
+                  responseEditorIsFocused={responseEditor?.isFocused || false}
+                  setExpandedToolResult={setExpandedToolResult}
+                  setExpandedToolCall={setExpandedToolCall}
+                  onApprove={onApprove}
+                  onDeny={onDeny}
+                  approvingApprovalId={approvingApprovalId}
+                  denyingApprovalId={denyingApprovalId}
+                  setDenyingApprovalId={setDenyingApprovalId}
+                  onCancelDeny={onCancelDeny}
+                />
+              )}
+            </div>
           )
-        }
-
-        return (
-          <ConversationEventRow
-            key={event.id}
-            event={event}
-            toolResult={event.toolId ? toolResultsByKey[event.toolId] : undefined}
-            setFocusedEventId={setFocusedEventId}
-            setFocusSource={setFocusSource || (() => {})}
-            shouldIgnoreMouseEvent={shouldIgnoreMouseEvent || (() => false)}
-            isFocused={focusedEventId === event.id}
-            isLast={index === eventsToRender.length - 1}
-            responseEditorIsFocused={responseEditor?.isFocused || false}
-            setExpandedToolResult={setExpandedToolResult}
-            setExpandedToolCall={setExpandedToolCall}
-            onApprove={onApprove}
-            onDeny={onDeny}
-            approvingApprovalId={approvingApprovalId}
-            denyingApprovalId={denyingApprovalId}
-            setDenyingApprovalId={setDenyingApprovalId}
-            onCancelDeny={onCancelDeny}
-          />
-        )
-      })}
+        })}
+      </div>
     </div>
   )
 }

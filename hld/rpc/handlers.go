@@ -269,7 +269,8 @@ func (h *SessionHandlers) HandleGetConversation(ctx context.Context, params json
 		events, err = h.store.GetConversation(ctx, req.ClaudeSessionID)
 	} else {
 		// Get conversation by session ID - always returns full history including parents
-		events, err = h.store.GetSessionConversation(ctx, req.SessionID)
+		// Default to 1000 items, offset 0 for RPC clients (backward compatibility)
+		events, err = h.store.GetSessionConversation(ctx, req.SessionID, 1000, 0)
 	}
 
 	if err != nil {

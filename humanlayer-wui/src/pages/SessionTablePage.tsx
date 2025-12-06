@@ -369,7 +369,7 @@ export function SessionTablePage() {
           </Button>
         )}
       </nav>
-      <div ref={tableRef} tabIndex={-1} className="focus:outline-none">
+      <div id="session-table-container" ref={tableRef} tabIndex={-1} className="focus:outline-none">
         <SessionTable
           sessions={sessions}
           handleFocusSession={session => {

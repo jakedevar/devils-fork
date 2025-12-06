@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { register } from '@tauri-apps/plugin-global-shortcut'
@@ -90,6 +90,9 @@ export function Layout() {
   const activeSessionDetail = useStore(state => state.activeSessionDetail)
   const [homePath, setHomePath] = useState<string>('')
 
+  // File Explorer Ref
+  const fileTreeRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     homeDir().then(setHomePath).catch(console.error)
   }, [])
@@ -111,6 +114,60 @@ export function Layout() {
       preventDefault: true, 
     },
     [isFileExplorerOpen, setFileExplorerOpen]
+  )
+
+  // Toggle Focus between Explorer and Main Content (Ctrl+H)
+  useHotkeys(
+    'ctrl+h',
+    () => {
+      console.log('[Layout] Ctrl+H pressed')
+      if (!isFileExplorerOpen) {
+        console.log('[Layout] File explorer not open, returning');
+        return
+      }
+
+      const currentActiveElement = document.activeElement
+      console.log('[Layout] document.activeElement:', currentActiveElement)
+      console.log('[Layout] fileTreeRef.current:', fileTreeRef.current)
+
+      const isSidebarFocused = fileTreeRef.current?.contains(currentActiveElement) || fileTreeRef.current === currentActiveElement
+      console.log('[Layout] isSidebarFocused:', isSidebarFocused)
+
+      if (isSidebarFocused) {
+        console.log('[Layout] Sidebar is focused. Attempting to focus main content.')
+        // Focus Main Content
+        if (location.pathname.startsWith('/sessions/')) {
+            // Focus Chat Editor
+            const editor = useStore.getState().responseEditor
+            editor?.commands.focus()
+            console.log('[Layout] Focused chat editor')
+        } else {
+            // Focus Session List
+            const tableContainer = document.getElementById('session-table-container')
+            if (tableContainer) {
+              tableContainer.focus()
+              console.log('[Layout] Focused session table')
+            } else {
+              console.warn('[Layout] Session table container not found')
+            }
+        }
+      } else {
+        console.log('[Layout] Sidebar is NOT focused. Attempting to focus sidebar.')
+        // Focus Sidebar
+        if (fileTreeRef.current) {
+          fileTreeRef.current.focus()
+          console.log('[Layout] Focused file tree ref')
+        } else {
+          console.warn('[Layout] File tree ref is null')
+        }
+      }
+    },
+    {
+      enableOnFormTags: true,
+      enableOnContentEditable: true,
+      preventDefault: true
+    },
+    [isFileExplorerOpen, location.pathname]
   )
 
   /*
@@ -1033,7 +1090,7 @@ export function Layout() {
                </button>
              </div>
              <div className="flex-1 overflow-hidden">
-               {rootPath && <FileTree key={`${rootPath}-${refreshKey}`} path={rootPath} />}
+               {rootPath && <FileTree ref={fileTreeRef} key={`${rootPath}-${refreshKey}`} path={rootPath} />}
              </div>
           </aside>
         )}
@@ -1092,7 +1149,7 @@ export function Layout() {
       <div className="flex justify-between items-center px-3 py-1.5 border-t border-border bg-secondary/30">
         <div className="flex items-center gap-4">
           <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-            humanlayer
+            Ψ DEVILS FORK
           </div>
           {connected && healthStatus === 'degraded' && (
             <Button

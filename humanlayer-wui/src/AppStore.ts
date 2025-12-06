@@ -106,6 +106,10 @@ interface StoreState {
   setSettingsDialogOpen: (open: boolean) => void
   isEditingSessionTitle: boolean
   setIsEditingSessionTitle: (editing: boolean) => void
+  
+  /* File Explorer */
+  isFileExplorerOpen: boolean
+  setFileExplorerOpen: (open: boolean) => void
 
   /* Auto-scroll State */
   autoScrollEnabled: boolean
@@ -1105,6 +1109,10 @@ export const useStore = create<StoreState>((set, get) => {
     setSettingsDialogOpen: (open: boolean) => set({ isSettingsDialogOpen: open }),
     isEditingSessionTitle: false,
     setIsEditingSessionTitle: (editing: boolean) => set({ isEditingSessionTitle: editing }),
+
+    // File Explorer
+    isFileExplorerOpen: true, // Default to open for visibility
+    setFileExplorerOpen: (open: boolean) => set({ isFileExplorerOpen: open }),
 
     // Auto-scroll state
     autoScrollEnabled: true, // Default to enabled

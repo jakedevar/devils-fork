@@ -32,7 +32,9 @@ import { notificationService, type NotificationOptions } from '@/services/Notifi
 import { useTheme } from '@/contexts/ThemeContext'
 import { formatMcpToolName, getSessionNotificationText } from '@/utils/formatting'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { MessageCircle, Bug, HelpCircle, Settings, AlertCircle, RefreshCw } from 'lucide-react'
+import { homeDir } from '@tauri-apps/api/path'
+import { MessageCircle, Bug, HelpCircle, Settings, AlertCircle, RefreshCw, Sidebar, FolderTree } from 'lucide-react'
+import { FileTree } from '@/components/FileExplorer/FileTree'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { DebugPanel } from '@/components/DebugPanel'
 import { notifyLogLocation } from '@/lib/log-notification'
@@ -81,6 +83,32 @@ export function Layout() {
 
   // Debug store state
   const showDevUrl = useDebugStore(state => state.showDevUrl)
+  
+  // File Explorer State
+  const isFileExplorerOpen = useStore(state => state.isFileExplorerOpen)
+  const setFileExplorerOpen = useStore(state => state.setFileExplorerOpen)
+  const activeSessionDetail = useStore(state => state.activeSessionDetail)
+  const [homePath, setHomePath] = useState<string>('')
+
+  useEffect(() => {
+    homeDir().then(setHomePath).catch(console.error)
+  }, [])
+  
+  // Determine root path for explorer
+  // If in session view and session has workingDir -> use it
+  // Else -> use home dir
+  const rootPath = activeSessionDetail?.session?.workingDir || homePath
+
+  // Toggle sidebar hotkey (Cmd+B like VS Code, or similar)
+  useHotkeys(
+    'meta+b, ctrl+b',
+    () => setFileExplorerOpen(!isFileExplorerOpen),
+    {
+      scopes: [HOTKEY_SCOPES.ROOT],
+      preventDefault: true, 
+    },
+    [isFileExplorerOpen, setFileExplorerOpen]
+  )
 
   /*
     react-hotkeys-hook had some trouble doing adding this shortcut,
@@ -986,10 +1014,25 @@ export function Layout() {
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
-      {/* Main content */}
-      <main className="flex-1 flex flex-col p-4 overflow-hidden">
-        {connected && (
-          <>
+      {/* Main content area with Sidebar */}
+      <div className="flex-1 flex overflow-hidden">
+        {isFileExplorerOpen && (
+          <aside className="w-64 border-r border-border bg-secondary/10 flex flex-col shrink-0 transition-all duration-300">
+             <div className="p-2 h-9 text-xs font-mono uppercase text-muted-foreground border-b border-border flex items-center gap-2 select-none">
+               <FolderTree className="h-3 w-3" />
+               <span className="truncate" title={rootPath}>
+                 {rootPath === homePath ? '~' : rootPath.split('/').pop()}
+               </span>
+             </div>
+             <div className="flex-1 overflow-hidden">
+               {rootPath && <FileTree path={rootPath} />}
+             </div>
+          </aside>
+        )}
+        
+        <main className="flex-1 flex flex-col p-4 overflow-hidden min-w-0">
+          {connected && (
+            <>
             {location.pathname !== '/' && <Breadcrumbs />}
             <div className="flex-1 overflow-y-auto" data-main-scroll-container>
               <Outlet />
@@ -1035,6 +1078,7 @@ export function Layout() {
           </>
         )}
       </main>
+      </div>
 
       {/* Status bar */}
       <div className="flex justify-between items-center px-3 py-1.5 border-t border-border bg-secondary/30">
@@ -1061,6 +1105,21 @@ export function Layout() {
           )}
         </div>
         <div className="flex items-center gap-3">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setFileExplorerOpen(!isFileExplorerOpen)}
+                className={`inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-mono border border-border bg-background hover:bg-accent/10 transition-colors focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:outline-none ${isFileExplorerOpen ? 'text-accent' : 'text-foreground'}`}
+              >
+                <Sidebar className="w-3 h-3" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="flex items-center gap-1">
+                Toggle Explorer <KeyboardShortcut keyString="⌘+B" />
+              </p>
+            </TooltipContent>
+          </Tooltip>
           {import.meta.env.DEV && showDevUrl && (
             <span className="text-xs text-muted-foreground">{window.location.href}</span>
           )}

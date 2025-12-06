@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { Info, Infinity } from 'lucide-react'
+import { Info, Infinity as InfinityIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { useStore } from '@/AppStore'
 import { logger } from '@/lib/logging'
@@ -114,7 +114,7 @@ export const SessionModeIndicator: FC<SessionModeIndicatorProps> = ({
         )}
       >
         <div className="flex items-center gap-2">
-          <Infinity
+          <InfinityIcon
             className={cn("h-4 w-4", {
               "drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]": isPermanentBypass,
             })}

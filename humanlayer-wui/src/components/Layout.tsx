@@ -98,6 +98,9 @@ export function Layout() {
   // If in session view and session has workingDir -> use it
   // Else -> use home dir
   const rootPath = activeSessionDetail?.session?.workingDir || homePath
+  
+  // Force refresh key for FileTree
+  const [refreshKey, setRefreshKey] = useState(0)
 
   // Toggle sidebar hotkey (Cmd+B like VS Code, or similar)
   useHotkeys(
@@ -1018,14 +1021,19 @@ export function Layout() {
       <div className="flex-1 flex overflow-hidden">
         {isFileExplorerOpen && (
           <aside className="w-64 border-r border-border bg-secondary/10 flex flex-col shrink-0 transition-all duration-300">
-             <div className="p-2 h-9 text-xs font-mono uppercase text-muted-foreground border-b border-border flex items-center gap-2 select-none">
-               <FolderTree className="h-3 w-3" />
-               <span className="truncate" title={rootPath}>
-                 {rootPath === homePath ? '~' : rootPath.split('/').pop()}
-               </span>
+             <div className="p-2 h-9 text-xs font-mono uppercase text-muted-foreground border-b border-border flex items-center justify-between select-none">
+               <div className="flex items-center gap-2 overflow-hidden">
+                 <FolderTree className="h-3 w-3 shrink-0" />
+                 <span className="truncate" title={rootPath}>
+                   {rootPath === homePath ? '~' : rootPath.split('/').pop()}
+                 </span>
+               </div>
+               <button onClick={() => setRefreshKey(k => k + 1)} className="hover:text-foreground transition-colors">
+                 <RefreshCw className="h-3 w-3" />
+               </button>
              </div>
              <div className="flex-1 overflow-hidden">
-               {rootPath && <FileTree path={rootPath} />}
+               {rootPath && <FileTree key={`${rootPath}-${refreshKey}`} path={rootPath} />}
              </div>
           </aside>
         )}

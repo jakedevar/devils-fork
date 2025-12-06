@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { readDir, DirEntry } from '@tauri-apps/plugin-fs'
+import { homeDir } from '@tauri-apps/api/path'
 
 export interface FileTreeNode extends DirEntry {
   path: string
@@ -14,11 +15,20 @@ export function useFileTree(path: string) {
   const fetchContents = useCallback(async () => {
     if (!path) return
 
+    console.log('[useFileTree] reading path:', path) // Debug log
+
     setIsLoading(true)
     setError(null)
     try {
+      let resolvePath = path
+      // Expand home directory if needed
+      if (path === '~' || path.startsWith('~/')) {
+        const home = await homeDir()
+        resolvePath = path === '~' ? home : path.replace('~', home)
+      }
+
       // Basic readDir
-      const entries = await readDir(path)
+      const entries = await readDir(resolvePath)
       
       // Sort: Folders first, then files. Alphabetical within groups.
       const sorted = entries.sort((a, b) => {
@@ -31,13 +41,13 @@ export function useFileTree(path: string) {
       // Map to FileTreeNode
       const nodes: FileTreeNode[] = sorted.map(entry => ({
         ...entry,
-        path: `${path}/${entry.name}`, // Simple concatenation, might need safer join
+        path: `${resolvePath}/${entry.name}`, // Simple concatenation, might need safer join
       }))
 
       setContents(nodes)
     } catch (err) {
       console.error('Error reading directory:', path, err)
-      setError(err instanceof Error ? err.message : 'Unknown error')
+      setError(err instanceof Error ? err.message : JSON.stringify(err))
     } finally {
       setIsLoading(false)
     }
